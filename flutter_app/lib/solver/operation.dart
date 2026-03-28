@@ -3,4 +3,5 @@ abstract class Operation {
   String format(String a, String b);
   bool get isCommutative;
   int get priority;
+  String get symbol;
 }

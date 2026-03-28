@@ -12,8 +12,11 @@ class Subtraction implements Operation {
   // Matching Python original: set to true (non-commutative branch not used).
   // Set to false to find all solutions including reversed operand order.
   @override
-  bool get isCommutative => true;
+  bool get isCommutative => false;
 
   @override
   int get priority => 0;
+
+  @override
+  String get symbol => '-';
 }

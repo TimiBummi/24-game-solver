@@ -12,8 +12,11 @@ class Division implements Operation {
   // Matching Python original: set to true.
   // Set to false to find all solutions including reversed operand order.
   @override
-  bool get isCommutative => true;
+  bool get isCommutative => false;
 
   @override
   int get priority => 1;
+
+  @override
+  String get symbol => '/';
 }

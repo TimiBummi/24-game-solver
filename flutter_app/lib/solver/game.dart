@@ -1,5 +1,6 @@
 import 'operation.dart';
 import 'formula.dart';
+import 'expr_tree.dart';
 import 'addition.dart';
 import 'subtraction.dart';
 import 'multiplication.dart';
@@ -32,12 +33,12 @@ class Game {
                 viableResults.any((r) => (f.result - r).abs() < 0.0001))
             .toList();
 
-    // Deduplicate by string representation
+    // Deduplicate by canonical expression tree (catches arithmetic equivalences)
     final seen = <String>{};
     final unique = <Formula>[];
     for (final formula in filtered) {
-      final str = formula.toDisplayString(cards);
-      if (seen.add(str)) unique.add(formula);
+      final key = Expr.canonicalKey(formula, cards);
+      if (seen.add(key)) unique.add(formula);
     }
     return unique;
   }
@@ -50,12 +51,13 @@ class Game {
     final formulas = <Formula>[];
     for (int i = 0; i < values.length - 1; i++) {
       for (int j = i + 1; j < values.length; j++) {
+        // remaining = values with index j removed; result placed at index i
         final remaining = List<double>.of(values)..removeAt(j);
 
         for (final op in operations) {
-          _tryOperation(values, remaining, op, i, j, formulas);
+          _tryOp(remaining, op, values[i], values[j], i, j, i, formulas);
           if (!op.isCommutative) {
-            _tryOperation(values, remaining, op, j, i, formulas);
+            _tryOp(remaining, op, values[j], values[i], j, i, i, formulas);
           }
         }
       }
@@ -63,18 +65,20 @@ class Game {
     return formulas;
   }
 
-  void _tryOperation(
-    List<double> values,
+  void _tryOp(
     List<double> remaining,
     Operation op,
+    double a,
+    double b,
     int firstInd,
     int secondInd,
+    int placeAt,
     List<Formula> out,
   ) {
-    final calculated = op.calc(values[firstInd], values[secondInd]);
+    final calculated = op.calc(a, b);
     if (calculated.isNaN || calculated.isInfinite) return;
 
-    final next = List<double>.of(remaining)..[firstInd] = calculated;
+    final next = List<double>.of(remaining)..[placeAt] = calculated;
     final subFormulas = _solveRecursively(next);
     for (final f in subFormulas) {
       out.add(f.withStep(op, firstInd, secondInd));
