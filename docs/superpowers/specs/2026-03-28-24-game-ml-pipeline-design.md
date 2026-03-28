@@ -182,7 +182,7 @@ Camera photo (JPEG)
 ## Repository Structure
 
 ```
-/home/tim/24/
+/home/tim/training/project_24/
   notebooks/
     01_yolo_card_detector.ipynb
     02_rank_classifier.ipynb

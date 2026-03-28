@@ -10,7 +10,7 @@
 
 **Spec:** `docs/superpowers/specs/2026-03-28-24-game-ml-pipeline-design.md`
 
-**Repo:** `/home/tim/24`
+**Repo:** `/home/tim/training/project_24`
 
 ---
 
@@ -60,7 +60,7 @@
 - [ ] **Step 1: Create notebooks directory and requirements.txt**
 
 ```bash
-cd /home/tim/24
+cd /home/tim/training/project_24
 mkdir -p notebooks
 ```
 
@@ -89,7 +89,7 @@ __pycache__/
 - [ ] **Step 3: Commit**
 
 ```bash
-cd /home/tim/24
+cd /home/tim/training/project_24
 git add notebooks/requirements.txt notebooks/.gitignore
 git commit -m "feat: add training pipeline infrastructure"
 ```
@@ -276,7 +276,7 @@ print("\nCopy the .tflite file to flutter_app/assets/models/card_detector.tflite
 - [ ] **Step 2: Commit**
 
 ```bash
-cd /home/tim/24
+cd /home/tim/training/project_24
 git add notebooks/01_yolo_card_detector.ipynb
 git commit -m "feat: add YOLO card detector training notebook"
 ```
@@ -601,7 +601,7 @@ print(f"\nTFLite quick check: {correct}/{total} correct")
 - [ ] **Step 2: Commit**
 
 ```bash
-cd /home/tim/24
+cd /home/tim/training/project_24
 git add notebooks/02_rank_classifier.ipynb
 git commit -m "feat: add rank classifier training notebook"
 ```
@@ -646,7 +646,7 @@ Run all cells. Verify:
 - [ ] **Step 3: Download TFLite models**
 
 ```bash
-cd /home/tim/24/flutter_app
+cd /home/tim/training/project_24/flutter_app
 mkdir -p assets/models
 
 # Copy the exported models from Colab downloads
@@ -660,7 +660,7 @@ ls -la assets/models/
 - [ ] **Step 4: Commit models**
 
 ```bash
-cd /home/tim/24
+cd /home/tim/training/project_24
 git add flutter_app/assets/models/card_detector.tflite flutter_app/assets/models/rank_classifier.tflite
 git commit -m "feat: add trained TFLite models (card detector + rank classifier)"
 ```
@@ -694,7 +694,7 @@ Add assets section — replace the commented-out assets block (lines 63-66) with
 - [ ] **Step 2: Run pub get**
 
 ```bash
-cd /home/tim/24/flutter_app
+cd /home/tim/training/project_24/flutter_app
 flutter pub get
 ```
 
@@ -703,7 +703,7 @@ Expected: resolves successfully, `tflite_flutter` appears in `pubspec.lock`.
 - [ ] **Step 3: Commit**
 
 ```bash
-cd /home/tim/24
+cd /home/tim/training/project_24
 git add flutter_app/pubspec.yaml flutter_app/pubspec.lock
 git commit -m "feat: swap google_mlkit_text_recognition for tflite_flutter"
 ```
@@ -869,7 +869,7 @@ class YoloDetector {
 - [ ] **Step 2: Verify it compiles**
 
 ```bash
-cd /home/tim/24/flutter_app
+cd /home/tim/training/project_24/flutter_app
 dart analyze lib/recognition/yolo_detector.dart
 ```
 
@@ -878,7 +878,7 @@ Expected: no errors.
 - [ ] **Step 3: Commit**
 
 ```bash
-cd /home/tim/24
+cd /home/tim/training/project_24
 git add flutter_app/lib/recognition/yolo_detector.dart
 git commit -m "feat: add YOLO TFLite detector wrapper"
 ```
@@ -993,14 +993,14 @@ class RankClassifier {
 - [ ] **Step 2: Verify it compiles**
 
 ```bash
-cd /home/tim/24/flutter_app
+cd /home/tim/training/project_24/flutter_app
 dart analyze lib/recognition/rank_classifier.dart
 ```
 
 - [ ] **Step 3: Commit**
 
 ```bash
-cd /home/tim/24
+cd /home/tim/training/project_24
 git add flutter_app/lib/recognition/rank_classifier.dart
 git commit -m "feat: add rank classifier TFLite wrapper"
 ```
@@ -1154,14 +1154,14 @@ class MlPipeline {
 - [ ] **Step 2: Verify it compiles**
 
 ```bash
-cd /home/tim/24/flutter_app
+cd /home/tim/training/project_24/flutter_app
 dart analyze lib/recognition/ml_pipeline.dart
 ```
 
 - [ ] **Step 3: Commit**
 
 ```bash
-cd /home/tim/24
+cd /home/tim/training/project_24
 git add flutter_app/lib/recognition/ml_pipeline.dart
 git commit -m "feat: add ML pipeline orchestrator (detector + classifier)"
 ```
@@ -1203,14 +1203,14 @@ class CardRecognizer {
 - [ ] **Step 2: Verify it compiles**
 
 ```bash
-cd /home/tim/24/flutter_app
+cd /home/tim/training/project_24/flutter_app
 dart analyze lib/recognition/card_recognizer.dart
 ```
 
 - [ ] **Step 3: Commit**
 
 ```bash
-cd /home/tim/24
+cd /home/tim/training/project_24
 git add flutter_app/lib/recognition/card_recognizer.dart
 git commit -m "refactor: rewrite CardRecognizer for capture-only ML pipeline"
 ```
@@ -1249,14 +1249,14 @@ class CardParser {
 - [ ] **Step 2: Verify it compiles**
 
 ```bash
-cd /home/tim/24/flutter_app
+cd /home/tim/training/project_24/flutter_app
 dart analyze lib/recognition/card_parser.dart
 ```
 
 - [ ] **Step 3: Commit**
 
 ```bash
-cd /home/tim/24
+cd /home/tim/training/project_24
 git add flutter_app/lib/recognition/card_parser.dart
 git commit -m "refactor: trim card_parser.dart to value/label maps only"
 ```
@@ -1891,14 +1891,14 @@ class _DetectionOverlayPainter extends CustomPainter {
 - [ ] **Step 2: Verify it compiles**
 
 ```bash
-cd /home/tim/24/flutter_app
+cd /home/tim/training/project_24/flutter_app
 dart analyze lib/screens/camera_screen.dart
 ```
 
 - [ ] **Step 3: Commit**
 
 ```bash
-cd /home/tim/24
+cd /home/tim/training/project_24
 git add flutter_app/lib/screens/camera_screen.dart
 git commit -m "refactor: simplify camera screen for capture-only ML pipeline"
 ```
@@ -1916,7 +1916,7 @@ git commit -m "refactor: simplify camera screen for capture-only ML pipeline"
 - [ ] **Step 1: Delete old files**
 
 ```bash
-cd /home/tim/24/flutter_app
+cd /home/tim/training/project_24/flutter_app
 rm lib/recognition/pip_counter.dart
 rm lib/recognition/image_preprocessor.dart
 rm lib/recognition/recognition_fusion.dart
@@ -1926,7 +1926,7 @@ rm lib/recognition/card_detector.dart
 - [ ] **Step 2: Verify the app still compiles**
 
 ```bash
-cd /home/tim/24/flutter_app
+cd /home/tim/training/project_24/flutter_app
 dart analyze lib/
 ```
 
@@ -1935,7 +1935,7 @@ Expected: no errors. The deleted files should not be imported anywhere after the
 - [ ] **Step 3: Commit**
 
 ```bash
-cd /home/tim/24
+cd /home/tim/training/project_24
 git add -A flutter_app/lib/recognition/
 git commit -m "refactor: remove old OCR recognition pipeline files"
 ```
@@ -2007,7 +2007,7 @@ void main() {
 - [ ] **Step 2: Run tests**
 
 ```bash
-cd /home/tim/24/flutter_app
+cd /home/tim/training/project_24/flutter_app
 flutter test test/card_parser_test.dart test/solver_test.dart
 ```
 
@@ -2016,7 +2016,7 @@ Expected: all tests pass.
 - [ ] **Step 3: Commit**
 
 ```bash
-cd /home/tim/24
+cd /home/tim/training/project_24
 git add flutter_app/test/card_parser_test.dart
 git commit -m "test: update card_parser tests for trimmed API"
 ```
@@ -2028,7 +2028,7 @@ git commit -m "test: update card_parser tests for trimmed API"
 - [ ] **Step 1: Full static analysis**
 
 ```bash
-cd /home/tim/24/flutter_app
+cd /home/tim/training/project_24/flutter_app
 dart analyze lib/ test/
 ```
 
@@ -2037,7 +2037,7 @@ Expected: no errors or warnings.
 - [ ] **Step 2: Run all tests**
 
 ```bash
-cd /home/tim/24/flutter_app
+cd /home/tim/training/project_24/flutter_app
 flutter test
 ```
 
@@ -2046,7 +2046,7 @@ Expected: all tests pass (solver_test.dart + card_parser_test.dart).
 - [ ] **Step 3: Build the app**
 
 ```bash
-cd /home/tim/24/flutter_app
+cd /home/tim/training/project_24/flutter_app
 flutter build apk --debug
 ```
 
@@ -2068,7 +2068,7 @@ Install on a real Android device and test:
 If any fixes were needed, commit them:
 
 ```bash
-cd /home/tim/24
+cd /home/tim/training/project_24
 git add -A
 git commit -m "fix: address issues found during end-to-end testing"
 ```
