@@ -4,7 +4,7 @@ A 24 Game solver with **automatic card recognition** — point your phone camera
 
 ## What is the 24 Game?
 
-Given 4 playing cards, use addition, subtraction, multiplication, and division to make the number 24. For example: `1, 6, 11, 13` → `(11 - 1 - 6) * 13 = ... ` no wait — `(13 - 11) * (6 + 1 + 5)` ... the solver will figure it out.
+Given 4 playing cards, use addition, subtraction, multiplication, and division to make the number 24. For example: `1, 6, 11, 13` → `(11 - 1 - 6) * 13 = ... ` no wait — `(13 - 11) * (6 + 1)` ... the solver will figure it out.
 
 ## Architecture
 
