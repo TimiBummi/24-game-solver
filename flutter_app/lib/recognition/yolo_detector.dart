@@ -30,14 +30,14 @@ class YoloDetection {
 /// Runs YOLOv8-nano TFLite inference for card detection.
 class YoloDetector {
   static const int inputSize = 320;
-  static const double defaultConfThreshold = 0.5;
+  static const double defaultConfThreshold = 0.25;
   static const double nmsIouThreshold = 0.5;
 
   Interpreter? _interpreter;
 
   /// Load the TFLite model from assets.
   Future<void> load() async {
-    _interpreter = await Interpreter.fromAsset('models/card_detector.tflite');
+    _interpreter = await Interpreter.fromAsset('assets/models/card_detector.tflite');
   }
 
   /// Detect cards in an image. Returns normalized bounding boxes.
@@ -64,31 +64,36 @@ class YoloDetector {
     // YOLOv8 TFLite output shape: [1, 5, N] where 5 = [x, y, w, h, conf]
     // N = number of detection candidates (depends on input size).
     final outputShape = _interpreter!.getOutputTensor(0).shape;
-    final outputSize = outputShape.reduce((a, b) => a * b);
-    final outputBuffer = Float32List(outputSize);
-    final outputTensor = outputBuffer.reshape(outputShape);
+    final numDetections = outputShape.last;
+    // Use a nested list as output — tflite_flutter writes into this structure,
+    // not into the flat buffer that reshape() is derived from.
+    final outputTensor = List.generate(1, (_) =>
+        List.generate(5, (_) => List.filled(numDetections, 0.0)));
 
     _interpreter!.run(inputTensor, outputTensor);
 
-    // 3. Decode output.
-    // Output is [1, 5, N] — transpose to get N detections of [x, y, w, h, conf].
-    final numDetections = outputShape.last;
+    // 3. Decode output: outputTensor[0][row][i]
+    final rows = outputTensor[0] as List;
+    final confRow = rows[4] as List;
+    final maxConf = confRow.fold<double>(0, (m, v) => (v as double) > m ? v : m);
+    // ignore: avoid_print
+    print('[YOLO] output shape: $outputShape, numDetections: $numDetections, max conf: ${maxConf.toStringAsFixed(3)}');
 
     final detections = <YoloDetection>[];
     for (int i = 0; i < numDetections; i++) {
-      final conf = outputBuffer[4 * numDetections + i]; // confidence at row 4
+      final conf = (confRow[i] as double);
       if (conf < confThreshold) continue;
 
-      final cx = outputBuffer[0 * numDetections + i]; // center x
-      final cy = outputBuffer[1 * numDetections + i]; // center y
-      final w = outputBuffer[2 * numDetections + i];  // width
-      final h = outputBuffer[3 * numDetections + i];  // height
+      final cx = (rows[0] as List)[i] as double; // center x
+      final cy = (rows[1] as List)[i] as double; // center y
+      final w  = (rows[2] as List)[i] as double; // width
+      final h  = (rows[3] as List)[i] as double; // height
 
-      // Convert from center-wh to top-left-wh, normalized by input size.
-      final nx = (cx - w / 2) / inputSize;
-      final ny = (cy - h / 2) / inputSize;
-      final nw = w / inputSize;
-      final nh = h / inputSize;
+      // Model outputs normalized [0,1] center-format — convert to top-left only.
+      final nx = cx - w / 2;
+      final ny = cy - h / 2;
+      final nw = w;
+      final nh = h;
 
       detections.add(YoloDetection(
         x: nx.clamp(0, 1),

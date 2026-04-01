@@ -1,3 +1,4 @@
+-dontwarn org.tensorflow.lite.gpu.GpuDelegateFactory$Options
 -dontwarn com.google.mlkit.vision.text.chinese.ChineseTextRecognizerOptions$Builder
 -dontwarn com.google.mlkit.vision.text.chinese.ChineseTextRecognizerOptions
 -dontwarn com.google.mlkit.vision.text.devanagari.DevanagariTextRecognizerOptions$Builder

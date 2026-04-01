@@ -42,7 +42,13 @@ class RankClassifier {
 
   /// Load the TFLite model from assets.
   Future<void> load() async {
-    _interpreter = await Interpreter.fromAsset('models/rank_classifier.tflite');
+    _interpreter = await Interpreter.fromAsset('assets/models/rank_classifier.tflite');
+    final inT = _interpreter!.getInputTensor(0);
+    final outT = _interpreter!.getOutputTensor(0);
+    // ignore: avoid_print
+    print('[RANK] input: shape=${inT.shape}, type=${inT.type}');
+    // ignore: avoid_print
+    print('[RANK] output: shape=${outT.shape}, type=${outT.type}');
   }
 
   /// Classify a cropped card image into one of 13 ranks.
@@ -66,11 +72,15 @@ class RankClassifier {
     final inputTensor = input.reshape([1, inputSize, inputSize, 3]);
 
     // 2. Run inference — output is [1, 13] softmax.
-    final output = Float32List(13).reshape([1, 13]);
-    _interpreter!.run(inputTensor, output);
+    // Float32List is required: tflite_flutter writes into typed data buffers only.
+    // Plain List<double> (List.filled) is not written back by the runtime.
+    final outputBuffer = Float32List(13);
+    _interpreter!.run(inputTensor, [outputBuffer]);
 
     // 3. Find argmax.
-    final probs = output[0] as List<double>;
+    final probs = outputBuffer;
+    // ignore: avoid_print
+    print('[RANK] probs: ${probs.map((v) => v.toStringAsFixed(3)).toList()}');
     int bestIdx = 0;
     double bestConf = probs[0];
     for (int i = 1; i < probs.length; i++) {

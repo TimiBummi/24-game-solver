@@ -90,11 +90,12 @@ class MlPipeline {
     // 1. Detect cards.
     final detections = _detector.detect(image);
 
-    // 2. For each detection, crop and classify.
-    final cards = <PipelineCard>[];
+    // 2. Classify every detected corner region.
+    // Each physical card produces two detections (upper-left and lower-right
+    // rank indicators). Classify all, then deduplicate by rank, keeping the
+    // highest-confidence read per rank value.
+    final allPredictions = <PipelineCard>[];
     for (final det in detections) {
-      if (cards.length >= 4) break; // max 4 cards for the game
-
       final rect = det.toPixelRect(image.width, image.height);
       final crop = img.copyCrop(
         image,
@@ -106,7 +107,7 @@ class MlPipeline {
 
       final prediction = _classifier.classify(crop);
       if (prediction != null) {
-        cards.add(PipelineCard(
+        allPredictions.add(PipelineCard(
           value: prediction.value,
           confidence: prediction.confidence,
           x: det.x,
@@ -116,6 +117,20 @@ class MlPipeline {
         ));
       }
     }
+
+    // Deduplicate: keep the highest-confidence detection per rank value.
+    final best = <int, PipelineCard>{};
+    for (final card in allPredictions) {
+      final existing = best[card.value];
+      if (existing == null || card.confidence > existing.confidence) {
+        best[card.value] = card;
+      }
+    }
+
+    // Sort by confidence descending, take up to 4.
+    final cards = best.values.toList()
+      ..sort((a, b) => b.confidence.compareTo(a.confidence));
+    if (cards.length > 4) cards.length = 4;
 
     return PipelineResult(
       cards: cards,
