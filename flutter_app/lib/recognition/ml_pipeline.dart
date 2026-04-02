@@ -92,18 +92,26 @@ class MlPipeline {
 
     // 2. Classify every detected corner region.
     // Each physical card produces two detections (upper-left and lower-right
-    // rank indicators). Classify all, then deduplicate by rank, keeping the
-    // highest-confidence read per rank value.
+    // rank indicators). BR crops are rotated 180° so the rank digit is always
+    // upright before classification. Deduplicate by rank keeping highest
+    // confidence read per rank value.
+    final brIndices = _findBrIndices(detections);
     final allPredictions = <PipelineCard>[];
-    for (final det in detections) {
+    for (int i = 0; i < detections.length; i++) {
+      final det = detections[i];
       final rect = det.toPixelRect(image.width, image.height);
-      final crop = img.copyCrop(
+      var crop = img.copyCrop(
         image,
         x: rect.x,
         y: rect.y,
         width: rect.w,
         height: rect.h,
       );
+
+      // Rotate bottom-right corner crops to upright orientation.
+      if (brIndices.contains(i)) {
+        crop = img.copyRotate(crop, angle: 180);
+      }
 
       final prediction = _classifier.classify(crop);
       if (prediction != null) {
@@ -138,6 +146,50 @@ class MlPipeline {
       imageHeight: image.height,
       detectionsFound: detections.length,
     );
+  }
+
+  /// Pair detections by nearest neighbour; return indices of BR corners.
+  ///
+  /// Within each pair the detection with the higher cx+cy is the bottom-right
+  /// rank indicator and must be rotated 180° before classification.
+  Set<int> _findBrIndices(List<YoloDetection> detections) {
+    final n = detections.length;
+    if (n == 0) return {};
+
+    double cx(YoloDetection d) => d.x + d.width / 2;
+    double cy(YoloDetection d) => d.y + d.height / 2;
+    double diag(int i) => cx(detections[i]) + cy(detections[i]);
+
+    final used = List<bool>.filled(n, false);
+    final brSet = <int>{};
+
+    // Process in order of increasing cx+cy (top-left detections first).
+    final order = List<int>.generate(n, (i) => i)
+      ..sort((a, b) => diag(a).compareTo(diag(b)));
+
+    for (final i in order) {
+      if (used[i]) continue;
+      double bestDist = double.infinity;
+      int bestJ = -1;
+      for (int j = 0; j < n; j++) {
+        if (j == i || used[j]) continue;
+        final dx = cx(detections[i]) - cx(detections[j]);
+        final dy = cy(detections[i]) - cy(detections[j]);
+        final d2 = dx * dx + dy * dy;
+        if (d2 < bestDist) {
+          bestDist = d2;
+          bestJ = j;
+        }
+      }
+      used[i] = true;
+      if (bestJ >= 0) {
+        used[bestJ] = true;
+        // The one with higher cx+cy is the bottom-right corner.
+        brSet.add(diag(bestJ) >= diag(i) ? bestJ : i);
+      }
+      // Lone detection → assume TL, no rotation.
+    }
+    return brSet;
   }
 
   void dispose() {

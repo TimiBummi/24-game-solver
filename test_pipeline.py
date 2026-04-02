@@ -183,6 +183,41 @@ def _nms(detections: List[Detection]) -> List[Detection]:
 # Rank classifier (mirrors rank_classifier.dart)
 # ---------------------------------------------------------------------------
 
+def _find_br_indices(detections: list) -> set:
+    """Pair detections by nearest neighbour; return indices of BR corners.
+
+    Within each pair the detection with the higher cx+cy is the bottom-right
+    rank indicator and should be rotated 180° before classification.
+    """
+    n = len(detections)
+    if n == 0:
+        return set()
+    centers = [(d.x + d.w / 2, d.y + d.h / 2) for d in detections]
+    used = [False] * n
+    br_set: set = set()
+    # Process in order of increasing cx+cy (top-left detections first)
+    order = sorted(range(n), key=lambda i: centers[i][0] + centers[i][1])
+    for i in order:
+        if used[i]:
+            continue
+        best_j, best_dist = -1, float('inf')
+        for j in range(n):
+            if j == i or used[j]:
+                continue
+            dx = centers[i][0] - centers[j][0]
+            dy = centers[i][1] - centers[j][1]
+            if (d2 := dx * dx + dy * dy) < best_dist:
+                best_dist, best_j = d2, j
+        used[i] = True
+        if best_j >= 0:
+            used[best_j] = True
+            ci = centers[i][0] + centers[i][1]
+            cj = centers[best_j][0] + centers[best_j][1]
+            br_set.add(best_j if cj >= ci else i)
+        # lone detection → assume TL, no rotation
+    return br_set
+
+
 def _run_classifier(interpreter, image_rgb: np.ndarray) -> Tuple[int, float]:
     """Classify a card crop. Returns (card_value, confidence)."""
     input_details = interpreter.get_input_details()
@@ -227,8 +262,12 @@ def run_pipeline(
     detections = _run_detector(detector_interp, img_arr)
     print(f'  [DETECTOR] {len(detections)} card(s) after NMS')
 
+    # Determine which detections are bottom-right corners (need 180° rotation).
+    br_indices = _find_br_indices(detections)
+
     # Classify every detected corner region.
     # Each physical card has two rank indicators (upper-left + lower-right).
+    # BR crops are rotated 180° so the rank digit is always upright.
     # Classify all, then deduplicate by rank keeping highest confidence read.
     all_preds: List[CardResult] = []
     crops: List[np.ndarray] = []
@@ -243,10 +282,13 @@ def run_pipeline(
         ph = min(ph, h - py)
 
         crop = img_arr[py:py + ph, px:px + pw]
+        if i in br_indices:
+            crop = np.rot90(crop, 2)  # rotate 180°
         crops.append(crop)
         value, conf = _run_classifier(classifier_interp, crop)
         all_preds.append(CardResult(value=value, confidence=conf, det=det))
-        print(f'  [CLASSIFIER] det {i+1}: {VALUE_TO_LABEL[value]:>2}  '
+        corner_tag = 'BR' if i in br_indices else 'TL'
+        print(f'  [CLASSIFIER] det {i+1} ({corner_tag}): {VALUE_TO_LABEL[value]:>2}  '
               f'(conf {conf:.3f})  bbox=({det.x:.2f},{det.y:.2f},'
               f'{det.w:.2f},{det.h:.2f})')
 
