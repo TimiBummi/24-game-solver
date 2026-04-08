@@ -72,13 +72,11 @@ class RankClassifier {
     final inputTensor = input.reshape([1, inputSize, inputSize, 3]);
 
     // 2. Run inference — output is [1, 13] softmax.
-    // Float32List is required: tflite_flutter writes into typed data buffers only.
-    // Plain List<double> (List.filled) is not written back by the runtime.
-    final outputBuffer = Float32List(13);
-    _interpreter!.run(inputTensor, [outputBuffer]);
+    final outputBuffer = List.generate(1, (_) => List<double>.filled(13, 0.0));
+    _interpreter!.run(inputTensor, outputBuffer);
 
     // 3. Find argmax.
-    final probs = outputBuffer;
+    final probs = outputBuffer[0];
     // ignore: avoid_print
     print('[RANK] probs: ${probs.map((v) => v.toStringAsFixed(3)).toList()}');
     int bestIdx = 0;

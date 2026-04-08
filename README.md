@@ -4,13 +4,13 @@ A 24 Game solver with **automatic card recognition** — point your phone camera
 
 ## What is the 24 Game?
 
-Given 4 playing cards, use addition, subtraction, multiplication, and division to make the number 24. For example: `1, 6, 11, 13` → `(11 - 1 - 6) * 13 = ... ` no wait — `(13 - 11) * (6 + 1)` ... the solver will figure it out.
+Given 4 playing cards, use addition, subtraction, multiplication, and division to make the number 24. For example: `3, 3, 8, 8` → `8 / (3 - 8/3)` — or let the solver figure it out.
 
 ## Architecture
 
 ```
 Camera photo
-  → [YOLOv8-nano]           detect & crop each card (~6 MB, FP16 TFLite)
+  → [YOLOv8-nano]           detect & crop each card corner (~6 MB, FP16 TFLite)
   → [MobileNetV3-Small]     classify rank A–K per crop (~2.5 MB, FP16 TFLite)
   → card values → solver    enumerate all valid expressions → display solutions
 ```
@@ -24,25 +24,32 @@ Both models run **on-device** via TFLite — no internet required.
 ├── game.py              # Core solver logic
 ├── formula.py           # Expression tree representation
 ├── Operations/          # +, -, *, / operator classes
-├── notebooks/
-│   ├── 01_yolo_card_detector.ipynb    # Train YOLOv8-nano card detector
-│   ├── 02_german_card_synth.ipynb     # Synthetic data generator for German cards (B/D indices)
-│   └── 03_rank_classifier.ipynb       # Train MobileNetV3-Small rank classifier
+├── training/
+│   ├── notebooks/
+│   │   ├── 01_yolo_card_detector.ipynb    # Train YOLOv8-nano card detector
+│   │   └── 02_rank_classifier.ipynb       # Train MobileNetV3-Small rank classifier
+│   ├── scripts/
+│   │   ├── augment_and_extract.py         # Generate training crops from labeled photos
+│   │   ├── test_pipeline.py               # Batch-test full ML pipeline on real photos
+│   │   └── test_classifier.py             # Test classifier in isolation
+│   └── data/
+│       ├── photos/                        # Labeled real card photos
+│       └── real_crops_v2/                 # YOLO-extracted + augmented corner crops
 └── flutter_app/         # Flutter mobile app with TFLite inference
 ```
 
 ## ML Pipeline
 
-The recognition pipeline replaces brittle OCR-based detection with two trained models:
+The recognition pipeline uses two trained models:
 
-| Stage | Model | Task | Input | Latency |
+| Stage | Model | Task | Input | Accuracy |
 |-------|-------|------|-------|---------|
-| 1 | YOLOv8-nano | Detect cards in frame | 320×320 | 20–40ms |
-| 2 | MobileNetV3-Small | Classify rank (A–K) | 128×128 crop | 5–10ms per card |
+| 1 | YOLOv8-nano | Detect card corners | 320×320 | — |
+| 2 | MobileNetV3-Small | Classify rank (A–K) | 128×128 crop | ~79% on real photos |
 
 Training runs on **Google Colab** (free GPU). See the notebooks for data sources, training configs, and export steps.
 
-**German card support:** The synthetic data generator (`02_german_card_synth.ipynb`) creates training images with German corner indices (B for Bube/Jack, D for Dame/Queen) to handle German playing card decks.
+**Training data:** 114 labeled real card photos → YOLO-extracted corner crops → augmented (rotation, brightness, noise) → ~5,100 crops across 13 rank classes.
 
 ## Python CLI
 
@@ -56,14 +63,18 @@ Edit the `rounds` list in `main.py` to try different card combinations.
 
 ## Flutter App
 
-The mobile app lives in `flutter_app/`. It uses the camera to capture cards, runs both TFLite models, and displays all valid solutions.
+The mobile app lives in `flutter_app/`. It uses the camera to capture cards, runs both TFLite models on-device, and displays all valid solutions.
 
 ```bash
+export JAVA_HOME="/path/to/android-studio/jbr"
+export ANDROID_HOME="/path/to/Android/Sdk"
+export PATH="/path/to/flutter/bin:$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$PATH"
+
 cd flutter_app
 flutter run
 ```
 
-Requires Flutter 3.x and Android/iOS device or emulator.
+Requires Flutter 3.x and an Android device with USB debugging enabled.
 
 ## Tech Stack
 

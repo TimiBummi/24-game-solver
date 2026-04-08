@@ -79,12 +79,13 @@ VALUE_TO_LABEL = {
     11: 'J', 12: 'Q', 13: 'K',
 }
 
-# Default model paths relative to this script
+# Default model paths — training/scripts/ is 2 levels below project root
 _SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+_PROJECT_DIR = os.path.dirname(os.path.dirname(_SCRIPT_DIR))
 DEFAULT_DETECTOR = os.path.join(
-    _SCRIPT_DIR, 'flutter_app', 'assets', 'models', 'card_detector.tflite')
+    _PROJECT_DIR, 'flutter_app', 'assets', 'models', 'card_detector.tflite')
 DEFAULT_CLASSIFIER = os.path.join(
-    _SCRIPT_DIR, 'flutter_app', 'assets', 'models', 'rank_classifier.tflite')
+    _PROJECT_DIR, 'flutter_app', 'assets', 'models', 'rank_classifier.tflite')
 
 
 # ---------------------------------------------------------------------------
@@ -348,15 +349,26 @@ def _save_crops(
 # Label parsing
 # ---------------------------------------------------------------------------
 
+_SUITS = {'d', 'h', 's', 'c', 'D', 'H', 'S', 'C'}
+
+
+def _strip_suit(token: str) -> str:
+    """Strip trailing suit character if present (e.g. '2d' → '2', 'Jh' → 'J')."""
+    if len(token) > 1 and token[-1] in _SUITS:
+        return token[:-1]
+    return token
+
+
 def parse_expected(label_str: str) -> Optional[List[int]]:
     if not label_str or not label_str.strip():
         return None
     values = []
     for token in label_str.strip().split():
-        if token not in LABEL_TO_VALUE:
+        rank = _strip_suit(token)
+        if rank not in LABEL_TO_VALUE:
             print(f'  WARNING: unknown card label "{token}", skipping')
             continue
-        values.append(LABEL_TO_VALUE[token])
+        values.append(LABEL_TO_VALUE[rank])
     return values if values else None
 
 
