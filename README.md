@@ -6,6 +6,14 @@ A 24 Game solver with **automatic card recognition** — point your phone camera
 
 Given 4 playing cards, use addition, subtraction, multiplication, and division to make the number 24. For example: `1, 6, 11, 13` → `(11 - 1 - 6) * 13 = ... ` no wait — `(13 - 11) * (6 + 1)` ... the solver will figure it out.
 
+## Demo
+
+![App in action](media/demo.gif)
+
+| Card recognition | Ready to solve |
+|---|---|
+| ![Screenshot 1](media/screenshot1.jpeg) | ![Screenshot 2](media/screenshot2.jpeg) |
+
 ## Architecture
 
 ```
