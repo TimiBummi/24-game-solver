@@ -4,10 +4,9 @@ from Operations.operation import Operation
 # Formulas don't hold the information of the actual values
 
 class Formula:
-    def __init__(self, result: float):
-        if result.is_integer():
+    def __init__(self, result):
+        if isinstance(result, float) and result.is_integer():
             result = int(result)
-
         self.result = result
         self.steps = []
 

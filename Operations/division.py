@@ -5,6 +5,8 @@ class Division(Operation):
 
     @staticmethod
     def calc(value1, value2):
+        if value2 == 0:
+            return float('nan')
         return value1 / value2
 
     @classmethod
